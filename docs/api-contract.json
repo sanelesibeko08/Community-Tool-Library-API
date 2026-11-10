@@ -1,0 +1,161 @@
+{
+  "apiName": "Community Tool Library API",
+  "version": "1.0.0",
+  "errorFormat": {
+    "shape": {
+      "error": "CODE",
+      "message": "description"
+    }
+  },
+  "successFormat": {
+    "shape": {
+      "data": "..."
+    }
+  },
+  "resources": {
+    "Tool": {
+      "properties": {
+        "id": "string, auto-generated",
+        "name": "string, required",
+        "category": "string, required, one of: Power Tools | Hand Tools | Garden",
+        "condition": "string, required, one of: good | fair | poor",
+        "available": "boolean, auto-set to true on creation"
+      },
+      "operations": {
+        "LIST": {
+          "endpoint": "GET /api/tools",
+          "queryParams": {
+            "available": "optional, true|false"
+          },
+          "response": {
+            "200": {
+              "data": "[...tools]"
+            }
+          }
+        },
+        "CREATE": {
+          "endpoint": "POST /api/tools",
+          "request": {
+            "name": "string, required",
+            "category": "string, required",
+            "condition": "string, required"
+          },
+          "response": {
+            "201": {
+              "data": "{...newTool}"
+            },
+            "400": {
+              "error": "VALIDATION_ERROR",
+              "message": "<description>"
+            }
+          }
+        }
+      }
+    },
+    "Loan": {
+      "properties": {
+        "id": "UUID, auto-generated",
+        "toolId": "UUID, required, references a tool",
+        "memberId": "UUID, required, set from the authenticated member",
+        "dueDate": "string, required, YYYY-MM-DD",
+        "returnedAt": "string|null, defaults to null, set when returned",
+        "createdAt": "timestamp, auto-generated"
+      },
+      "operations": {
+        "LIST": {
+          "endpoint": "GET /api/loans",
+          "authentication": "BearerAuth required",
+          "response": {
+            "200": {
+              "data": "[...loans belonging to the authenticated member]"
+            },
+            "401": {
+              "error": "UNAUTHORIZED",
+              "message": "<description>"
+            }
+          }
+        },
+        "CREATE": {
+          "endpoint": "POST /api/loans",
+          "authentication": "BearerAuth required",
+          "request": {
+            "toolId": "UUID, required",
+            "dueDate": "string, required, YYYY-MM-DD"
+          },
+          "response": {
+            "201": {
+              "data": "{...newLoan}"
+            },
+            "400": {
+              "error": "VALIDATION_ERROR",
+              "message": "<description>"
+            },
+            "401": {
+              "error": "UNAUTHORIZED",
+              "message": "<description>"
+            },
+            "404": {
+              "error": "NOT_FOUND",
+              "message": "<description>"
+            },
+            "409": {
+              "error": "CONFLICT",
+              "message": "<description>"
+            }
+          }
+        },
+        "DELETE": {
+          "endpoint": "DELETE /api/loans/:id",
+          "authentication": "BearerAuth required",
+          "pathParams": {
+            "id": "UUID, required"
+          },
+          "response": {
+            "200": {
+              "data": "{...returnedLoan}"
+            },
+            "401": {
+              "error": "UNAUTHORIZED",
+              "message": "<description>"
+            },
+            "404": {
+              "error": "NOT_FOUND",
+              "message": "<description>"
+            },
+            "409": {
+              "error": "CONFLICT",
+              "message": "<description>"
+            }
+          }
+        }
+      }
+    },
+    "Member": {
+      "operations": {
+        "LOGIN": {
+          "endpoint": "POST /api/auth/login",
+          "request": {
+            "username": "string, required",
+            "password": "string, required"
+          },
+          "response": {
+            "200": {
+              "data": {
+                "token": "JWT string",
+                "member": "{id, username}"
+              }
+            },
+            "400": {
+              "error": "VALIDATION_ERROR",
+              "message": "<description>"
+            },
+            "401": {
+              "error": "UNAUTHORIZED",
+              "message": "<description>"
+            }
+          }
+        }
+      }
+    }
+  }
+}
